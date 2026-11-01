@@ -1,0 +1,6 @@
+{
+  "name": "مترجم هوشمند قهار | Master EN-FA AI Translator",
+  "description": "ابزار جامع و فوق‌پیشرفته ترجمه انگلیسی به فارسی با هوش مصنوعی جمینای، ۵ سبک تایپوگرافی، ورودی و خروجی صوت، لحن‌های چندگانه و تحلیل لغوی تخصصی",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

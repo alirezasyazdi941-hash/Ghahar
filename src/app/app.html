@@ -1,0 +1,1011 @@
+<div class="min-h-screen bg-[#07090e] text-slate-100 flex flex-col font-fa-minimal selection:bg-cyan-500/30 selection:text-cyan-200">
+  <!-- Toast Notification -->
+  @if (toastMessage(); as msg) {
+    <div class="fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-[#121622] text-cyan-300 border border-cyan-500/40 glow-cyan px-5 py-2.5 rounded-full text-sm font-medium flex items-center gap-2 shadow-2xl animate-bounce">
+      <mat-icon class="text-yellow-400 text-lg">auto_awesome</mat-icon>
+      <span>{{ msg }}</span>
+    </div>
+  }
+
+  <!-- Header / Navigation Bar -->
+  <header class="border-b border-white/5 bg-[#0b0e16]/80 backdrop-blur-md sticky top-0 z-40 px-4 lg:px-8 py-3.5">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
+      <!-- Brand & Title -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500/20 to-yellow-400/20 border border-cyan-400/30 flex items-center justify-center glow-cyan">
+          <mat-icon class="text-cyan-400 text-2xl">translate</mat-icon>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="font-bold text-lg text-white tracking-tight flex items-center gap-1.5">
+              ترجمان هوشمند قهار
+              <span class="text-xs px-2 py-0.5 rounded-full bg-yellow-400/10 text-yellow-300 border border-yellow-400/30 glow-yellow font-mono">
+                AI Studio 3.8
+              </span>
+            </h1>
+          </div>
+          <p class="text-xs text-slate-400 hidden sm:block">
+            دوزبانه تخصصی انگلیسی و فارسی با ۵ سبک تایپوگرافی، صوت، لحن‌های چندگانه و تحلیل لغوی
+          </p>
+        </div>
+      </div>
+
+      <!-- Quick Action Buttons -->
+      <div class="flex items-center gap-2">
+        <!-- Presentation / Gathering Mode Button -->
+        <button
+          type="button"
+          (click)="isGatheringMode.set(true)"
+          class="px-3 py-1.5 rounded-lg bg-[#141926] hover:bg-[#1c2436] border border-cyan-500/30 text-cyan-300 text-xs font-medium flex items-center gap-1.5 transition-all shadow-sm hover:glow-cyan"
+          title="نمایش تمام‌صفحه بدون حاشیه برای مجالس و سخنرانی‌ها"
+        >
+          <mat-icon class="text-base text-cyan-400">co_present</mat-icon>
+          <span class="hidden md:inline">حالت محفل و کنفرانس</span>
+        </button>
+
+        <!-- Master AI Prompt Modal Trigger -->
+        <button
+          type="button"
+          (click)="showPromptModal.set(true)"
+          class="px-3 py-1.5 rounded-lg bg-[#1a1705] hover:bg-[#262106] border border-yellow-500/40 text-yellow-300 text-xs font-medium flex items-center gap-1.5 transition-all hover:glow-yellow"
+          title="مشاهده و کپی پرامپت طلایی مهندسی‌شده گوگل استودیو"
+        >
+          <mat-icon class="text-base text-yellow-400">terminal</mat-icon>
+          <span class="hidden md:inline">پرامپت طلایی هوش مصنوعی</span>
+        </button>
+
+        <!-- History & Starred Trigger -->
+        <button
+          type="button"
+          (click)="showHistoryModal.set(true)"
+          class="px-3 py-1.5 rounded-lg bg-[#131620] hover:bg-[#1a1e2d] border border-white/10 text-slate-300 text-xs font-medium flex items-center gap-1.5 transition-all"
+          title="تاریخچه ترجمه‌ها و برگزیده‌ها"
+        >
+          <mat-icon class="text-base text-cyan-400">history</mat-icon>
+          <span class="hidden sm:inline">تاریخچه</span>
+          @if (engine.history().length > 0) {
+            <span class="w-4 h-4 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 text-[10px] flex items-center justify-center font-mono">
+              {{ engine.history().length }}
+            </span>
+          }
+        </button>
+
+        <!-- Audio Settings Trigger -->
+        <button
+          type="button"
+          (click)="showAudioSettings.set(!showAudioSettings())"
+          class="p-2 rounded-lg bg-[#131620] hover:bg-[#1a1e2d] border border-white/10 text-slate-300 text-xs transition-all"
+          [class.text-yellow-400]="showAudioSettings()"
+          title="تنظیمات سرعت و زیروبمی صدا"
+        >
+          <mat-icon class="text-lg">tune</mat-icon>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Audio Controls Floating Drawer (if opened) -->
+  @if (showAudioSettings()) {
+    <div class="bg-[#0f131c] border-b border-yellow-500/20 px-6 py-3 transition-all">
+      <div class="max-w-4xl mx-auto flex flex-wrap items-center justify-between gap-4 text-xs">
+        <div class="flex items-center gap-2 text-yellow-300">
+          <mat-icon class="text-sm">volume_up</mat-icon>
+          <span class="font-bold">تنظیمات تلفظ صوتی (Speech Engine):</span>
+        </div>
+        <div class="flex items-center gap-6">
+          <div class="flex items-center gap-2">
+            <span class="text-slate-400">سرعت خوانش:</span>
+            <input
+              type="range"
+              min="0.6"
+              max="1.5"
+              step="0.1"
+              [value]="speechRate()"
+              (input)="speechRate.set(+$any($event.target).value)"
+              class="w-24 accent-yellow-400 cursor-pointer"
+            />
+            <span class="font-mono text-cyan-300 w-8">{{ speechRate() }}x</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-slate-400">زیروبمی صدا:</span>
+            <input
+              type="range"
+              min="0.7"
+              max="1.4"
+              step="0.1"
+              [value]="speechPitch()"
+              (input)="speechPitch.set(+$any($event.target).value)"
+              class="w-24 accent-cyan-400 cursor-pointer"
+            />
+            <span class="font-mono text-yellow-300 w-8">{{ speechPitch() }}</span>
+          </div>
+          <button
+            type="button"
+            (click)="showAudioSettings.set(false)"
+            class="text-slate-400 hover:text-white"
+          >
+            <mat-icon class="text-base">close</mat-icon>
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Main Content Area -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 flex flex-col gap-6">
+    <!-- Tone Selection Bar -->
+    <section class="bg-[#0c0f17] border border-white/5 rounded-2xl p-3 sm:p-4 shadow-xl">
+      <div class="flex items-center justify-between flex-wrap gap-2 mb-2">
+        <div class="flex items-center gap-2 text-xs font-semibold text-slate-300">
+          <mat-icon class="text-cyan-400 text-sm">psychology</mat-icon>
+          <span>لحن و بافتار ترجمه (Nuanced Register):</span>
+        </div>
+        <span class="text-[11px] text-slate-500">
+          برای تغییر سبک ادبیاتی و گزینش دقیق واژه‌ها، لحن مورد نظر را انتخاب نمایید
+        </span>
+      </div>
+
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+        @for (tone of engine.tones; track tone.id) {
+          <button
+            type="button"
+            (click)="selectedTone.set(tone.id); executeTranslation()"
+            class="p-2.5 rounded-xl border text-right transition-all flex flex-col gap-1 text-xs"
+            [class.bg-cyan-500/10]="selectedTone() === tone.id"
+            [class.border-cyan-400/60]="selectedTone() === tone.id"
+            [class.glow-cyan]="selectedTone() === tone.id"
+            [class.bg-[#111520]]="selectedTone() !== tone.id"
+            [class.border-white/5]="selectedTone() !== tone.id"
+            [class.text-slate-300]="selectedTone() !== tone.id"
+          >
+            <div class="flex items-center justify-between">
+              <span
+                class="font-bold flex items-center gap-1.5"
+                [class.text-cyan-300]="selectedTone() === tone.id"
+                [class.text-white]="selectedTone() !== tone.id"
+              >
+                <mat-icon class="text-sm" [class.text-yellow-400]="selectedTone() === tone.id">
+                  {{ tone.icon }}
+                </mat-icon>
+                {{ tone.nameFa }}
+              </span>
+              @if (selectedTone() === tone.id) {
+                <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping"></span>
+              }
+            </div>
+            <span class="text-[10px] text-slate-400 leading-tight truncate">
+              {{ tone.description }}
+            </span>
+          </button>
+        }
+      </div>
+    </section>
+
+    <!-- Master Dual Translation Panel -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- 1. Source Panel -->
+      <section class="bg-[#0e121b] border border-white/10 rounded-2xl flex flex-col shadow-2xl relative group overflow-hidden">
+        <!-- Top Toolbar of Source Panel -->
+        <div class="px-4 py-3 border-b border-white/5 bg-[#121623]/60 flex items-center justify-between gap-3 flex-wrap">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 glow-cyan"></span>
+            <span class="text-xs font-bold uppercase tracking-wider text-cyan-300">
+              مبدأ: {{ sourceLang() === 'en' ? 'انگلیسی (English)' : 'فارسی (Persian)' }}
+            </span>
+          </div>
+
+          <!-- Language Swap Button -->
+          <button
+            type="button"
+            (click)="swapLanguages()"
+            class="px-2.5 py-1 rounded-lg bg-[#181d2c] hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 text-xs flex items-center gap-1 transition-all"
+            title="جابجایی زبان مبدأ و مقصد"
+          >
+            <mat-icon class="text-sm">sync_alt</mat-icon>
+            <span>جابجایی</span>
+          </button>
+
+          <!-- Typography Preset Selector for Source -->
+          <div class="flex items-center gap-1.5 text-xs">
+            <mat-icon class="text-yellow-400 text-sm">font_download</mat-icon>
+            <label for="source-typography-select" class="sr-only">قلم مبدأ</label>
+            <select
+              id="source-typography-select"
+              [value]="sourceLang() === 'en' ? selectedEnTypography() : selectedFaTypography()"
+              (change)="sourceLang() === 'en' ? selectedEnTypography.set($any($event.target).value) : selectedFaTypography.set($any($event.target).value)"
+              class="bg-[#161a28] text-slate-200 border border-white/10 rounded-lg px-2 py-1 text-xs focus:outline-none focus:border-cyan-400 cursor-pointer"
+            >
+              @if (sourceLang() === 'en') {
+                @for (t of engine.englishTypographies; track t.id) {
+                  <option [value]="t.id">{{ t.nameFa }} ({{ t.name }})</option>
+                }
+              } @else {
+                @for (t of engine.persianTypographies; track t.id) {
+                  <option [value]="t.id">{{ t.nameFa }}</option>
+                }
+              }
+            </select>
+          </div>
+        </div>
+
+        <!-- Textarea with dynamic font class -->
+        <div class="p-4 flex-1 flex flex-col min-h-[220px]">
+          <textarea
+            [formControl]="sourceTextControl"
+            placeholder="متن، جمله، کلمه یا اصطلاح انگلیسی را در اینجا تایپ یا الصاق نمایید..."
+            [class]="activeSourceTypography().cssClass"
+            [style.fontSize.px]="fontSizeLevel()"
+            class="w-full flex-1 bg-transparent resize-none text-slate-100 placeholder-slate-600 focus:outline-none leading-relaxed"
+            rows="7"
+            (keydown.control.enter)="executeTranslation()"
+            (keydown.meta.enter)="executeTranslation()"
+          ></textarea>
+
+          <!-- Live Voice Listening Visualizer (if recording) -->
+          @if (engine.isRecording()) {
+            <div class="my-2 p-2.5 rounded-xl bg-cyan-950/40 border border-cyan-400/50 glow-cyan flex items-center justify-between text-xs">
+              <div class="flex items-center gap-2 text-cyan-300">
+                <span class="w-3 h-3 rounded-full bg-red-500 animate-pulse"></span>
+                <span class="font-bold">{{ engine.speechStatus() }}</span>
+              </div>
+              <div class="flex items-center gap-1 h-6">
+                <span class="w-1 bg-cyan-400 rounded-full animate-audio-bar-1"></span>
+                <span class="w-1 bg-yellow-400 rounded-full animate-audio-bar-2"></span>
+                <span class="w-1 bg-cyan-400 rounded-full animate-audio-bar-3"></span>
+                <span class="w-1 bg-yellow-400 rounded-full animate-audio-bar-4"></span>
+                <span class="w-1 bg-cyan-400 rounded-full animate-audio-bar-5"></span>
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Bottom Toolbar of Source Panel -->
+        <div class="px-4 py-3 border-t border-white/5 bg-[#10141f]/80 flex items-center justify-between flex-wrap gap-2 text-xs">
+          <div class="flex items-center gap-2">
+            <!-- Voice Input Button -->
+            <button
+              type="button"
+              (click)="toggleVoiceInput()"
+              class="px-3 py-1.5 rounded-xl border flex items-center gap-1.5 transition-all text-xs font-semibold"
+              [class.bg-red-500/20]="engine.isRecording()"
+              [class.border-red-500]="engine.isRecording()"
+              [class.text-red-300]="engine.isRecording()"
+              [class.bg-[#161a29]]="!engine.isRecording()"
+              [class.border-cyan-500/40]="!engine.isRecording()"
+              [class.text-cyan-300]="!engine.isRecording()"
+              [class.hover:glow-cyan]="!engine.isRecording()"
+              title="ورودی صوتی (میکروفن)"
+            >
+              <mat-icon class="text-base" [class.text-red-400]="engine.isRecording()">
+                {{ engine.isRecording() ? 'mic_off' : 'mic' }}
+              </mat-icon>
+              <span>{{ engine.isRecording() ? 'توقف ضبط' : 'سخن گفتن' }}</span>
+            </button>
+
+            <!-- TTS Speaker Button -->
+            <button
+              type="button"
+              (click)="speakSource()"
+              class="p-2 rounded-xl bg-[#161a29] hover:bg-[#20263c] border border-white/10 text-slate-300 hover:text-yellow-300 transition-all"
+              title="تلفظ صوتی متن مبدأ"
+            >
+              <mat-icon class="text-base">volume_up</mat-icon>
+            </button>
+
+            <!-- File Upload Reader Button -->
+            <label
+              class="p-2 rounded-xl bg-[#161a29] hover:bg-[#20263c] border border-white/10 text-slate-300 hover:text-cyan-300 cursor-pointer transition-all"
+              title="بارگذاری فایل متنی (.txt / .md)"
+            >
+              <mat-icon class="text-base">upload_file</mat-icon>
+              <input
+                type="file"
+                accept=".txt,.md"
+                class="hidden"
+                (change)="onFileUpload($event)"
+              />
+            </label>
+
+            <!-- Clear Source -->
+            @if (sourceTextControl.value) {
+              <button
+                type="button"
+                (click)="clearSourceText()"
+                class="p-2 rounded-xl bg-[#161a29] hover:bg-[#20263c] border border-white/10 text-slate-400 hover:text-red-400 transition-all"
+                title="پاکسازی متن"
+              >
+                <mat-icon class="text-base">delete_sweep</mat-icon>
+              </button>
+            }
+          </div>
+
+          <!-- Character count & Submit Button -->
+          <div class="flex items-center gap-3">
+            <span class="text-slate-500 font-mono text-[11px]">
+              {{ sourceTextControl.value.length }} نویسه
+            </span>
+
+            <button
+              type="button"
+              (click)="executeTranslation()"
+              [disabled]="engine.isLoading()"
+              class="px-5 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold text-xs flex items-center gap-2 glow-cyan transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            >
+              @if (engine.isLoading()) {
+                <mat-icon class="text-base animate-spin">sync</mat-icon>
+                <span>در حال ترجمه...</span>
+              } @else {
+                <mat-icon class="text-base">auto_awesome</mat-icon>
+                <span>ترجمه قهار (Ctrl+Enter)</span>
+              }
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. Target Translation Panel -->
+      <section class="bg-[#0e121b] border border-white/10 rounded-2xl flex flex-col shadow-2xl relative overflow-hidden">
+        <!-- Top Toolbar of Target Panel -->
+        <div class="px-4 py-3 border-b border-white/5 bg-[#121623]/60 flex items-center justify-between gap-3 flex-wrap">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-yellow-400 glow-yellow"></span>
+            <span class="text-xs font-bold uppercase tracking-wider text-yellow-300">
+              مقصد: {{ targetLang() === 'fa' ? 'فارسی شاهکار (Persian)' : 'انگلیسی (English)' }}
+            </span>
+          </div>
+
+          <!-- Typography Preset Selector for Target -->
+          <div class="flex items-center gap-1.5 text-xs">
+            <mat-icon class="text-cyan-400 text-sm">text_fields</mat-icon>
+            <label for="target-typography-select" class="sr-only">قلم مقصد</label>
+            <select
+              id="target-typography-select"
+              [value]="targetLang() === 'fa' ? selectedFaTypography() : selectedEnTypography()"
+              (change)="targetLang() === 'fa' ? selectedFaTypography.set($any($event.target).value) : selectedEnTypography.set($any($event.target).value)"
+              class="bg-[#161a28] text-slate-200 border border-white/10 rounded-lg px-2 py-1 text-xs focus:outline-none focus:border-yellow-400 cursor-pointer"
+            >
+              @if (targetLang() === 'fa') {
+                @for (t of engine.persianTypographies; track t.id) {
+                  <option [value]="t.id">{{ t.nameFa }} ({{ t.name }})</option>
+                }
+              } @else {
+                @for (t of engine.englishTypographies; track t.id) {
+                  <option [value]="t.id">{{ t.nameFa }} ({{ t.name }})</option>
+                }
+              }
+            </select>
+          </div>
+
+          <!-- Font Size Adjuster Controls -->
+          <div class="flex items-center gap-1 bg-[#161a28] p-0.5 rounded-lg border border-white/10">
+            <button
+              type="button"
+              (click)="adjustFontSize(-2)"
+              class="px-2 py-0.5 text-xs text-slate-300 hover:text-white"
+              title="کاهش اندازه قلم"
+            >
+              A-
+            </button>
+            <button
+              type="button"
+              (click)="resetFontSize()"
+              class="px-2 py-0.5 text-xs font-mono text-cyan-300 border-x border-white/10"
+              title="بازنشانی اندازه"
+            >
+              {{ fontSizeLevel() }}px
+            </button>
+            <button
+              type="button"
+              (click)="adjustFontSize(+2)"
+              class="px-2 py-0.5 text-xs text-slate-300 hover:text-white"
+              title="افزایش اندازه قلم"
+            >
+              A+
+            </button>
+          </div>
+        </div>
+
+        <!-- Translation Result Content Area -->
+        <div class="p-4 flex-1 flex flex-col justify-between min-h-[220px]">
+          @if (engine.isLoading()) {
+            <div class="flex-1 flex flex-col items-center justify-center gap-3 py-10">
+              <div class="w-12 h-12 rounded-full border-2 border-cyan-400/20 border-t-cyan-400 animate-spin glow-cyan"></div>
+              <p class="text-xs text-cyan-300 font-mono animate-pulse">
+                موتور جمینای ۳.۸ در حال بازآفرینی ادبی و پردازش مفاهیم است...
+              </p>
+            </div>
+          } @else if (engine.errorMessage(); as err) {
+            <div class="flex-1 flex flex-col items-center justify-center p-6 text-center gap-3">
+              <mat-icon class="text-red-400 text-3xl">error_outline</mat-icon>
+              <p class="text-sm text-red-300 max-w-md">{{ err }}</p>
+              <button
+                type="button"
+                (click)="executeTranslation()"
+                class="px-4 py-1.5 rounded-xl bg-red-500/20 border border-red-500/40 text-red-200 text-xs hover:bg-red-500/30"
+              >
+                تلاش مجدد
+              </button>
+            </div>
+          } @else if (engine.currentResult(); as res) {
+            <div class="space-y-4">
+              <!-- Primary Master Translation with dynamic typography style -->
+              <div
+                [class]="activeTargetTypography().cssClass"
+                [style.fontSize.px]="fontSizeLevel()"
+                class="text-white leading-relaxed select-text"
+              >
+                {{ res.primaryTranslation }}
+              </div>
+
+              <!-- Reverse Translation Verification Pill -->
+              @if (res.reverseTranslation) {
+                <div class="p-2.5 rounded-xl bg-[#131724] border border-cyan-500/20 text-xs text-slate-300 flex items-start gap-2">
+                  <mat-icon class="text-cyan-400 text-sm mt-0.5">verified</mat-icon>
+                  <div>
+                    <span class="text-cyan-400 font-bold ml-1">ترجمه معکوس (اعتبارسنجی معنایی):</span>
+                    <span class="text-slate-400 font-mono text-[11px]">{{ res.reverseTranslation }}</span>
+                  </div>
+                </div>
+              }
+
+              <!-- Phonetic Pronunciation (if available) -->
+              @if (res.phonetic) {
+                <div class="flex items-center gap-2 text-xs text-yellow-300/90 font-mono">
+                  <mat-icon class="text-sm text-yellow-400">record_voice_over</mat-icon>
+                  <span>تلفظ / فونتیک: {{ res.phonetic }}</span>
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="flex-1 flex flex-col items-center justify-center text-center p-6 text-slate-500 gap-3">
+              <div class="w-12 h-12 rounded-2xl bg-[#141824] flex items-center justify-center border border-white/5">
+                <mat-icon class="text-yellow-400/60 text-2xl">menu_book</mat-icon>
+              </div>
+              <div>
+                <p class="text-sm text-slate-400 font-medium">ترجمه در انتظار دستور شماست</p>
+                <p class="text-xs text-slate-600 mt-1">
+                  متن خود را وارد کرده و دکمه «ترجمه قهار» را بزنید تا خروجی با ۵ سبک خط ارائه گردد
+                </p>
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Bottom Toolbar of Target Panel -->
+        <div class="px-4 py-3 border-t border-white/5 bg-[#10141f]/80 flex items-center justify-between flex-wrap gap-2 text-xs">
+          <!-- Voice Output, Copy & Star Buttons -->
+          <div class="flex items-center gap-2">
+            @if (engine.currentResult(); as res) {
+              <!-- TTS Button -->
+              <button
+                type="button"
+                (click)="speakTranslation()"
+                class="px-3 py-1.5 rounded-xl bg-[#161a29] hover:bg-yellow-400/20 border border-yellow-500/40 text-yellow-300 text-xs flex items-center gap-1.5 transition-all hover:glow-yellow"
+                title="شنیدن تلفظ با کیفیت بالا"
+              >
+                <mat-icon class="text-base text-yellow-400">volume_up</mat-icon>
+                <span>پخش صوت</span>
+              </button>
+
+              <!-- Copy Translation Button -->
+              <button
+                type="button"
+                (click)="copyToClipboard(res.primaryTranslation, 'ترجمه اصلی')"
+                class="px-3 py-1.5 rounded-xl bg-[#161a29] hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 text-xs flex items-center gap-1.5 transition-all hover:glow-cyan"
+                title="کپی ترجمه در کلیپ‌بورد"
+              >
+                <mat-icon class="text-base text-cyan-400">content_copy</mat-icon>
+                <span>کپی</span>
+              </button>
+
+              <!-- Export Dropdown -->
+              <div class="flex items-center gap-1 bg-[#161a29] p-0.5 rounded-xl border border-white/10">
+                <button
+                  type="button"
+                  (click)="exportTranslation('txt')"
+                  class="px-2 py-1 text-[11px] text-slate-300 hover:text-white"
+                  title="دانلود فایل TXT"
+                >
+                  TXT
+                </button>
+                <button
+                  type="button"
+                  (click)="exportTranslation('md')"
+                  class="px-2 py-1 text-[11px] text-cyan-300 hover:text-cyan-200 border-x border-white/10"
+                  title="دانلود فایل Markdown"
+                >
+                  MD
+                </button>
+                <button
+                  type="button"
+                  (click)="exportTranslation('json')"
+                  class="px-2 py-1 text-[11px] text-yellow-300 hover:text-yellow-200"
+                  title="دانلود فایل JSON"
+                >
+                  JSON
+                </button>
+              </div>
+            }
+          </div>
+
+          <!-- Eloquence Badge -->
+          @if (engine.currentResult(); as res) {
+            <div class="flex items-center gap-2">
+              <div class="flex items-center gap-1 px-2.5 py-1 rounded-full bg-yellow-400/10 border border-yellow-400/30 glow-yellow text-yellow-300 font-mono text-xs">
+                <mat-icon class="text-sm text-yellow-400">workspace_premium</mat-icon>
+                <span>فصاحت: {{ res.eloquenceScore || 98 }}٪</span>
+              </div>
+            </div>
+          }
+        </div>
+      </section>
+    </div>
+
+    <!-- Deep Linguistic Insights & Tabs (Alternatives, Vocabulary, Cultural Notes) -->
+    @if (engine.currentResult(); as res) {
+      <section class="bg-[#0b0e16] border border-white/10 rounded-2xl p-4 sm:p-6 shadow-2xl flex flex-col gap-4">
+        <!-- Tab Headers -->
+        <div class="flex items-center justify-between border-b border-white/10 pb-3 flex-wrap gap-2">
+          <div class="flex items-center gap-2">
+            <button
+              type="button"
+              (click)="activeTab.set('translation')"
+              class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
+              [class.bg-cyan-500/20]="activeTab() === 'translation'"
+              [class.border]="activeTab() === 'translation'"
+              [class.border-cyan-400/60]="activeTab() === 'translation'"
+              [class.text-cyan-300]="activeTab() === 'translation'"
+              [class.text-slate-400]="activeTab() !== 'translation'"
+            >
+              <mat-icon class="text-sm">alt_route</mat-icon>
+              <span>گزینه‌های جایگزین ترجمه</span>
+              @if (res.alternativeTranslations && res.alternativeTranslations.length > 0) {
+                <span class="w-4 h-4 rounded-full bg-cyan-500/20 text-cyan-300 text-[10px] flex items-center justify-center font-mono">
+                  {{ res.alternativeTranslations.length }}
+                </span>
+              }
+            </button>
+
+            <button
+              type="button"
+              (click)="activeTab.set('vocabulary')"
+              class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
+              [class.bg-yellow-400/20]="activeTab() === 'vocabulary'"
+              [class.border]="activeTab() === 'vocabulary'"
+              [class.border-yellow-400/60]="activeTab() === 'vocabulary'"
+              [class.text-yellow-300]="activeTab() === 'vocabulary'"
+              [class.text-slate-400]="activeTab() !== 'vocabulary'"
+            >
+              <mat-icon class="text-sm">dictionary</mat-icon>
+              <span>واژه‌نامه تخصصی و ریشه‌شناسی</span>
+              @if (res.vocabularyBreakdown && res.vocabularyBreakdown.length > 0) {
+                <span class="w-4 h-4 rounded-full bg-yellow-400/20 text-yellow-300 text-[10px] flex items-center justify-center font-mono">
+                  {{ res.vocabularyBreakdown.length }}
+                </span>
+              }
+            </button>
+
+            <button
+              type="button"
+              (click)="activeTab.set('cultural')"
+              class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
+              [class.bg-cyan-500/20]="activeTab() === 'cultural'"
+              [class.border]="activeTab() === 'cultural'"
+              [class.border-cyan-400/60]="activeTab() === 'cultural'"
+              [class.text-cyan-300]="activeTab() === 'cultural'"
+              [class.text-slate-400]="activeTab() !== 'cultural'"
+            >
+              <mat-icon class="text-sm">lightbulb</mat-icon>
+              <span>نکات فرهنگی و ضرب‌المثل‌ها</span>
+            </button>
+          </div>
+
+          <span class="text-[11px] text-slate-500 font-mono">
+            تحلیل هوشمند زبانی با جمینای
+          </span>
+        </div>
+
+        <!-- Tab 1: Alternative Translations -->
+        @if (activeTab() === 'translation') {
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            @if (res.alternativeTranslations && res.alternativeTranslations.length > 0) {
+              @for (alt of res.alternativeTranslations; track alt.translation) {
+                <div class="bg-[#111520] border border-white/5 hover:border-cyan-500/30 rounded-xl p-4 flex flex-col justify-between gap-3 transition-all group">
+                  <div class="space-y-2">
+                    <div class="flex items-center justify-between">
+                      <span class="px-2 py-0.5 rounded-md bg-cyan-400/10 text-cyan-300 border border-cyan-400/30 text-[11px] font-semibold">
+                        {{ alt.label }}
+                      </span>
+                      <button
+                        type="button"
+                        (click)="copyToClipboard(alt.translation, alt.label)"
+                        class="text-slate-500 hover:text-cyan-300 transition-all"
+                        title="کپی این عبارت"
+                      >
+                        <mat-icon class="text-sm">content_copy</mat-icon>
+                      </button>
+                    </div>
+                    <p class="text-sm text-slate-200 leading-relaxed font-fa-minimal">
+                      {{ alt.translation }}
+                    </p>
+                  </div>
+                  @if (alt.nuance) {
+                    <p class="text-[11px] text-slate-400 bg-[#0d1017] p-2 rounded-lg border border-white/5">
+                      💡 {{ alt.nuance }}
+                    </p>
+                  }
+                </div>
+              }
+            } @else {
+              <p class="text-xs text-slate-400 col-span-3">گزینه جایگزین دیگری برای این عبارت نیاز نبود.</p>
+            }
+          </div>
+        }
+
+        <!-- Tab 2: Vocabulary Breakdown -->
+        @if (activeTab() === 'vocabulary') {
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            @if (res.vocabularyBreakdown && res.vocabularyBreakdown.length > 0) {
+              @for (item of res.vocabularyBreakdown; track item.word) {
+                <div class="bg-[#121622] border border-yellow-500/20 rounded-xl p-4 flex flex-col gap-3 shadow-lg hover:glow-yellow transition-all">
+                  <div class="flex items-center justify-between border-b border-white/5 pb-2">
+                    <div class="flex items-center gap-2">
+                      <span class="font-bold text-yellow-300 font-en-bold text-base tracking-wide">
+                        {{ item.word }}
+                      </span>
+                      @if (item.partOfSpeech) {
+                        <span class="text-[10px] px-1.5 py-0.5 rounded bg-white/5 text-slate-400 font-mono">
+                          {{ item.partOfSpeech }}
+                        </span>
+                      }
+                    </div>
+                    <button
+                      type="button"
+                      (click)="engine.speakText(item.word, 'en')"
+                      class="text-yellow-400 hover:text-white"
+                      title="شنیدن تلفظ واژه"
+                    >
+                      <mat-icon class="text-sm">volume_up</mat-icon>
+                    </button>
+                  </div>
+
+                  <p class="text-xs text-slate-200 font-semibold leading-relaxed">
+                    {{ item.meaning }}
+                  </p>
+
+                  <!-- Synonyms & Antonyms -->
+                  @if (item.synonyms && item.synonyms.length > 0) {
+                    <div class="flex items-center gap-1.5 flex-wrap text-[11px]">
+                      <span class="text-cyan-400 font-semibold">مترادف‌ها:</span>
+                      @for (s of item.synonyms; track s) {
+                        <span class="px-1.5 py-0.5 rounded bg-cyan-950/40 text-cyan-300 border border-cyan-800/40 font-mono text-[10px]">
+                          {{ s }}
+                        </span>
+                      }
+                    </div>
+                  }
+
+                  @if (item.example) {
+                    <div class="mt-auto pt-2 border-t border-white/5 text-[11px] text-slate-400 bg-[#0a0d14] p-2 rounded-lg italic">
+                      "{{ item.example }}"
+                    </div>
+                  }
+                </div>
+              }
+            } @else {
+              <p class="text-xs text-slate-400 col-span-3">واژه‌نامه برای این جمله استخراج نشد.</p>
+            }
+          </div>
+        }
+
+        <!-- Tab 3: Cultural Context & Idioms -->
+        @if (activeTab() === 'cultural') {
+          <div class="bg-[#121622] border border-cyan-500/20 rounded-xl p-5 space-y-3">
+            <div class="flex items-center gap-2 text-cyan-300 font-bold text-sm">
+              <mat-icon class="text-yellow-400 text-base">psychology_alt</mat-icon>
+              <span>ریزه‌کاری‌ها، استعارات و معادل‌های اصیل فارسی:</span>
+            </div>
+            <p class="text-sm text-slate-200 leading-relaxed font-fa-minimal">
+              {{ res.culturalNotes || 'این عبارت مفهوم عمومی و مستقیمی دارد و فاقد کنایه یا استعاره پیچیده بومی است.' }}
+            </p>
+          </div>
+        }
+      </section>
+    }
+
+    <!-- Quick Inspiration Presets (Bottom) -->
+    <section class="bg-[#0b0e15] border border-white/5 rounded-2xl p-4">
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+          <mat-icon class="text-yellow-400 text-sm">bolt</mat-icon>
+          نمونه‌های آزمون سریع برای ارزیابی فصاحت مترجم قهار:
+        </span>
+        <span class="text-[11px] text-slate-500">یک کلیک برای تست هوشمند</span>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+        @for (preset of quickPresets; track preset.title) {
+          <button
+            type="button"
+            (click)="loadPreset(preset)"
+            class="text-right p-3 rounded-xl bg-[#121622] hover:bg-[#1a2030] border border-white/5 hover:border-cyan-500/40 transition-all flex flex-col justify-between gap-2 group cursor-pointer"
+          >
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-yellow-300 group-hover:text-yellow-200">
+                {{ preset.title }}
+              </span>
+              <mat-icon class="text-xs text-slate-500 group-hover:text-cyan-400">arrow_back</mat-icon>
+            </div>
+            <p class="text-[11px] text-slate-400 leading-tight line-clamp-2 font-mono">
+              "{{ preset.text }}"
+            </p>
+          </button>
+        }
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-white/5 bg-[#07090e] py-6 px-4 text-center text-xs text-slate-500">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-cyan-400 glow-cyan"></span>
+        <span class="text-slate-400">
+          سامانه هوشمند ترجمه دوطرفه انگلیسی و فارسی • ساخته شده برای گوگل AI Studio
+        </span>
+      </div>
+      <div class="flex items-center gap-4 text-[11px] font-mono">
+        <span class="text-slate-400">Model: gemini-3.8-flash</span>
+        <span class="text-yellow-400">HTML5 • CSS3 • Tailwind • Vanilla JSON</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Modal 1: Master Prompt Export (Requested specifically by user) -->
+  @if (showPromptModal()) {
+    <div class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+      <div class="bg-[#0e121b] border border-yellow-500/40 glow-yellow rounded-2xl max-w-2xl w-full p-6 shadow-2xl flex flex-col gap-4 max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between border-b border-white/10 pb-3">
+          <div class="flex items-center gap-2">
+            <mat-icon class="text-yellow-400 text-2xl">terminal</mat-icon>
+            <h2 class="text-base font-bold text-white">
+              پرامپت طلایی و تخصصی برای Google AI Studio
+            </h2>
+          </div>
+          <button
+            type="button"
+            (click)="showPromptModal.set(false)"
+            class="text-slate-400 hover:text-white"
+          >
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
+
+        <p class="text-xs text-slate-300 leading-relaxed">
+          این پرامپت مهندسی‌شده و جامع را می‌توانید مستقیماً در کنسول Google AI Studio یا تنظیمات سامانه خود قرار دهید تا بالاترین سطح هوشمندی زبانی، فصاحت ادبی و دقت مفهومی را دریافت نمایید:
+        </p>
+
+        <!-- Persian Master Prompt Block -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-yellow-300">نسخه فارسی پرامپت (Persian Prompt):</span>
+            <button
+              type="button"
+              (click)="copyToClipboard(masterPromptPersian, 'پرامپت فارسی')"
+              class="px-3 py-1 rounded-lg bg-yellow-400/20 text-yellow-300 border border-yellow-400/30 text-xs font-semibold hover:bg-yellow-400/30 flex items-center gap-1"
+            >
+              <mat-icon class="text-sm">content_copy</mat-icon>
+              <span>کپی پرامپت فارسی</span>
+            </button>
+          </div>
+          <div class="bg-[#090b10] border border-white/10 rounded-xl p-3.5 text-xs text-slate-300 font-fa-minimal whitespace-pre-wrap leading-relaxed">
+            {{ masterPromptPersian }}
+          </div>
+        </div>
+
+        <!-- English Master Prompt Block -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-cyan-300">نسخه انگلیسی پرامپت (English System Prompt):</span>
+            <button
+              type="button"
+              (click)="copyToClipboard(masterPromptEnglish, 'پرامپت انگلیسی')"
+              class="px-3 py-1 rounded-lg bg-cyan-400/20 text-cyan-300 border border-cyan-400/30 text-xs font-semibold hover:bg-cyan-400/30 flex items-center gap-1"
+            >
+              <mat-icon class="text-sm">content_copy</mat-icon>
+              <span>کپی پرامپت انگلیسی</span>
+            </button>
+          </div>
+          <div class="bg-[#090b10] border border-white/10 rounded-xl p-3.5 text-xs text-slate-300 font-mono whitespace-pre-wrap leading-relaxed text-left" dir="ltr">
+            {{ masterPromptEnglish }}
+          </div>
+        </div>
+
+        <div class="flex justify-end pt-2 border-t border-white/10">
+          <button
+            type="button"
+            (click)="showPromptModal.set(false)"
+            class="px-5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-slate-200 text-xs font-bold"
+          >
+            بستن پنجره
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Modal 2: Gathering Mode (حالت محفل و کنفرانس - Fullscreen Teleprompter) -->
+  @if (isGatheringMode()) {
+    <div class="fixed inset-0 z-50 bg-[#06080d] flex flex-col p-6 sm:p-12 overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-white/10 pb-4 mb-6">
+        <div class="flex items-center gap-3">
+          <span class="w-3 h-3 rounded-full bg-cyan-400 glow-cyan animate-pulse"></span>
+          <h2 class="text-lg font-bold text-white tracking-wide">
+            حالت محفل، سخنرانی و کنفرانس (Teleprompter Mode)
+          </h2>
+        </div>
+        <div class="flex items-center gap-3">
+          <!-- TTS in gathering mode -->
+          <button
+            type="button"
+            (click)="speakTranslation()"
+            class="px-3.5 py-1.5 rounded-xl bg-[#141824] hover:bg-[#1f2638] text-yellow-300 border border-yellow-500/40 text-xs flex items-center gap-1.5"
+          >
+            <mat-icon class="text-sm">volume_up</mat-icon>
+            <span>شنیدن صوت</span>
+          </button>
+          <button
+            type="button"
+            (click)="isGatheringMode.set(false)"
+            class="px-4 py-1.5 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/40 text-xs font-bold flex items-center gap-1"
+          >
+            <mat-icon class="text-sm">close</mat-icon>
+            <span>خروج از حالت محفل</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="flex-1 flex flex-col justify-center max-w-5xl mx-auto w-full gap-8">
+        <!-- Big Source Text -->
+        <div class="bg-[#0b0e16] p-6 sm:p-8 rounded-3xl border border-white/5 space-y-2">
+          <span class="text-xs font-mono text-cyan-400 uppercase tracking-widest">
+            متن مبدأ (Source)
+          </span>
+          <p
+            [class]="activeSourceTypography().cssClass"
+            class="text-xl sm:text-2xl text-slate-300 leading-relaxed"
+          >
+            {{ sourceTextControl.value || 'هنوز متنی وارد نشده است.' }}
+          </p>
+        </div>
+
+        <!-- Big Target Text with Selected Typography (e.g. Nastaliq, Kufi, etc.) -->
+        <div class="bg-[#0f1422] p-8 sm:p-12 rounded-3xl border border-yellow-500/30 glow-yellow space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-mono text-yellow-400 uppercase tracking-widest flex items-center gap-1">
+              <mat-icon class="text-sm">auto_awesome</mat-icon>
+              ترجمه شاهکار برای محفل
+            </span>
+            <span class="text-xs text-slate-400 font-mono">
+              قلم فعال: {{ activeTargetTypography().nameFa }}
+            </span>
+          </div>
+
+          <p
+            [class]="activeTargetTypography().cssClass"
+            class="text-2xl sm:text-4xl text-white leading-relaxed select-text"
+          >
+            {{ engine.currentResult()?.primaryTranslation || 'ترجمه هنوز بارگذاری نشده است.' }}
+          </p>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Modal 3: Translation History & Favorites -->
+  @if (showHistoryModal()) {
+    <div class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+      <div class="bg-[#0e121b] border border-white/10 rounded-2xl max-w-3xl w-full p-6 shadow-2xl flex flex-col gap-4 max-h-[85vh]">
+        <div class="flex items-center justify-between border-b border-white/10 pb-3">
+          <div class="flex items-center gap-2">
+            <mat-icon class="text-cyan-400 text-2xl">history</mat-icon>
+            <h2 class="text-base font-bold text-white">تاریخچه و نشان‌شده‌ها</h2>
+          </div>
+          <button
+            type="button"
+            (click)="showHistoryModal.set(false)"
+            class="text-slate-400 hover:text-white"
+          >
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
+
+        <!-- Search History -->
+        <div class="relative">
+          <input
+            type="text"
+            [formControl]="historySearchControl"
+            placeholder="جستجو در میان ترجمه‌های پیشین..."
+            class="w-full bg-[#131724] border border-white/10 rounded-xl px-4 py-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-400 pl-10"
+          />
+          <mat-icon class="absolute left-3 top-2.5 text-slate-500 text-sm">search</mat-icon>
+        </div>
+
+        <!-- History List -->
+        <div class="flex-1 overflow-y-auto space-y-3 pr-1">
+          @if (filteredHistory().length === 0) {
+            <p class="text-center text-xs text-slate-500 py-10">
+              هیچ رکوردی در تاریخچه یافت نشد.
+            </p>
+          } @else {
+            @for (item of filteredHistory(); track item.id) {
+              <div class="bg-[#111520] border border-white/5 rounded-xl p-3.5 flex flex-col gap-2 hover:border-cyan-500/30 transition-all">
+                <div class="flex items-center justify-between text-[11px] text-slate-400">
+                  <span class="font-mono text-cyan-300">
+                    {{ item.sourceLang.toUpperCase() }} ➔ {{ item.targetLang.toUpperCase() }} ({{ item.tone }})
+                  </span>
+                  <div class="flex items-center gap-2">
+                    <button
+                      type="button"
+                      (click)="engine.toggleFavorite(item.id)"
+                      class="text-slate-400 hover:text-yellow-400"
+                      [class.text-yellow-400]="item.isFavorite"
+                      title="نشان کردن"
+                    >
+                      <mat-icon class="text-base">{{ item.isFavorite ? 'star' : 'star_border' }}</mat-icon>
+                    </button>
+                    <button
+                      type="button"
+                      (click)="engine.deleteHistoryItem(item.id)"
+                      class="text-slate-500 hover:text-red-400"
+                      title="حذف"
+                    >
+                      <mat-icon class="text-base">delete</mat-icon>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
+                  <div class="bg-[#0b0e16] p-2 rounded-lg text-slate-300 line-clamp-2">
+                    {{ item.sourceText }}
+                  </div>
+                  <div class="bg-[#141926] p-2 rounded-lg text-white font-semibold line-clamp-2">
+                    {{ item.translatedText }}
+                  </div>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-1">
+                  <button
+                    type="button"
+                    (click)="sourceTextControl.setValue(item.sourceText); showHistoryModal.set(false); executeTranslation()"
+                    class="text-[11px] text-cyan-300 hover:underline"
+                  >
+                    بارگذاری مجدد و ترجمه
+                  </button>
+                </div>
+              </div>
+            }
+          }
+        </div>
+
+        <div class="flex items-center justify-between pt-3 border-t border-white/10">
+          <button
+            type="button"
+            (click)="engine.clearHistory()"
+            class="text-xs text-red-400 hover:underline flex items-center gap-1"
+          >
+            <mat-icon class="text-sm">delete_sweep</mat-icon>
+            پاک کردن کل تاریخچه
+          </button>
+          <button
+            type="button"
+            (click)="showHistoryModal.set(false)"
+            class="px-4 py-1.5 rounded-xl bg-white/10 text-slate-300 text-xs hover:bg-white/20"
+          >
+            بستن
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

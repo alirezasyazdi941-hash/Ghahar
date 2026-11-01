@@ -1,0 +1,96 @@
+@import "tailwindcss";
+
+/* Typography Class Utilities */
+.font-en-sans {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+.font-en-bold {
+  font-family: 'Syne', 'Montserrat', sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.font-en-script {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-style: italic;
+  letter-spacing: 0.01em;
+}
+.font-en-mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+.font-en-display {
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+.font-fa-nastaliq {
+  font-family: 'Noto Nastaliq Urdu', 'Amiri', serif;
+  line-height: 2.2 !important;
+}
+.font-fa-kufi {
+  font-family: 'Noto Kufi Arabic', 'Reem Kufi', sans-serif;
+  letter-spacing: -0.01em;
+}
+.font-fa-minimal {
+  font-family: 'Vazirmatn', sans-serif;
+}
+.font-fa-geometric {
+  font-family: 'Lalezar', 'Alexandria', sans-serif;
+}
+.font-fa-naskh {
+  font-family: 'Amiri', 'Noto Naskh Arabic', serif;
+  line-height: 1.9 !important;
+}
+
+/* Neon Glows & Borders */
+.glow-cyan {
+  box-shadow: 0 0 20px -2px rgba(0, 242, 254, 0.35), 0 0 8px 0 rgba(0, 242, 254, 0.2);
+}
+
+.glow-yellow {
+  box-shadow: 0 0 20px -2px rgba(255, 230, 0, 0.35), 0 0 8px 0 rgba(255, 230, 0, 0.2);
+}
+
+.glow-text-cyan {
+  text-shadow: 0 0 12px rgba(0, 242, 254, 0.6);
+}
+
+.glow-text-yellow {
+  text-shadow: 0 0 12px rgba(255, 230, 0, 0.6);
+}
+
+.neon-border-cyan {
+  border-color: rgba(0, 242, 254, 0.6);
+  box-shadow: 0 0 15px rgba(0, 242, 254, 0.2);
+}
+
+.neon-border-yellow {
+  border-color: rgba(255, 230, 0, 0.6);
+  box-shadow: 0 0 15px rgba(255, 230, 0, 0.2);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0d0f15;
+}
+::-webkit-scrollbar-thumb {
+  background: #1f2433;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #00f2fe;
+}
+
+/* Audio wave keyframes */
+@keyframes audio-pulse {
+  0%, 100% { height: 6px; }
+  50% { height: 26px; }
+}
+
+.animate-audio-bar-1 { animation: audio-pulse 0.9s ease-in-out infinite; }
+.animate-audio-bar-2 { animation: audio-pulse 0.7s ease-in-out 0.2s infinite; }
+.animate-audio-bar-3 { animation: audio-pulse 1.1s ease-in-out 0.4s infinite; }
+.animate-audio-bar-4 { animation: audio-pulse 0.8s ease-in-out 0.1s infinite; }
+.animate-audio-bar-5 { animation: audio-pulse 1s ease-in-out 0.3s infinite; }
